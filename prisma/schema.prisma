@@ -1,0 +1,255 @@
+// ============================================================
+// 🏢 CANJEPARAMICLIENTE - Marketplace de Canje Inmobiliario
+// ============================================================
+// Schema: Prisma + Supabase (PostgreSQL)
+// Version: 1.0.0
+// Author: Senior Systems Architect
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// 🧑‍💼 USER MODEL (Corredores Inmobiliarios)
+// ============================================================
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  phone           String?
+  avatarUrl       String?  @map("avatar_url")
+  
+  // Verification & Reputation System
+  isVerified      Boolean  @default(false) @map("is_verified")
+  reputationScore Int      @default(0) @map("reputation_score")
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  properties      Property[]
+  requirements    Requirement[]
+  
+  @@map("users")
+}
+
+// ============================================================
+// 🏠 PROPERTY MODEL (Lo que tienen los corredores)
+// ============================================================
+model Property {
+  id              String   @id @default(cuid())
+  
+  // Basic Information
+  title           String
+  description     String?  @db.Text
+  price           Decimal  @db.Decimal(15, 2) // Soporta hasta 999 billones
+  currency        String   @default("CLP")
+  
+  // Location
+  location        String   // Ciudad/Comuna
+  address         String?
+  latitude        Decimal? @db.Decimal(10, 8)
+  longitude       Decimal? @db.Decimal(11, 8)
+  
+  // Property Details
+  propertyType    PropertyType @default(APARTMENT) @map("property_type")
+  squareMeters    Int      @map("square_meters") // m2 útiles
+  landSquareMeters Int?    @map("land_square_meters") // m2 terreno
+  bedrooms        Int?
+  bathrooms       Int?
+  parkingSpots    Int?     @map("parking_spots")
+  yearBuilt       Int?     @map("year_built")
+  
+  // Status
+  status          PropertyStatus @default(ACTIVE)
+  isAvailable     Boolean  @default(true) @map("is_available")
+  
+  // ============================================================
+  // 🕵️ SHADOW FIELDS (OCULTOS - Solo uso administrativo)
+  // ============================================================
+  // Campo para marcar propiedades en situación de "distress" (urgencia de venta)
+  isDistressed    Boolean  @default(false) @map("is_distressed")
+  
+  // 🎯 ARCHER FLAG: Marca interna para "Oportunidad de Inversión"
+  // Solo visible para administradores - NO exponer en API pública
+  archerFlag      Boolean  @default(false) @map("archer_flag")
+  
+  // Score interno de oportunidad (0-100)
+  opportunityScore Int?    @map("opportunity_score")
+  
+  // Notas internas del equipo de análisis
+  internalNotes   String?  @db.Text @map("internal_notes")
+  // ============================================================
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  ownerId         String   @map("owner_id")
+  owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  matches         Match[]  @relation("PropertyToMatch")
+  images          PropertyImage[]
+  
+  @@index([ownerId])
+  @@index([location])
+  @@index([propertyType])
+  @@index([price])
+  @@index([archerFlag]) // Index para queries de oportunidades
+  @@index([isDistressed])
+  @@map("properties")
+}
+
+// ============================================================
+// 🎯 REQUIREMENT MODEL (Lo que buscan los corredores)
+// ============================================================
+// Tabla CLAVE para el sistema de Match
+model Requirement {
+  id              String   @id @default(cuid())
+  
+  // Budget Range
+  budgetMin       Decimal? @db.Decimal(15, 2) @map("budget_min")
+  budgetMax       Decimal  @db.Decimal(15, 2) @map("budget_max")
+  currency        String   @default("CLP")
+  
+  // Location Preferences
+  zoneInterest    String[] @map("zone_interest") // Zonas de interés (array)
+  
+  // Property Preferences
+  propertyTypes   PropertyType[] @map("property_types")
+  minSquareMeters Int?     @map("min_square_meters")
+  maxSquareMeters Int?     @map("max_square_meters")
+  minBedrooms     Int?     @map("min_bedrooms")
+  minBathrooms    Int?     @map("min_bathrooms")
+  
+  // Additional Preferences
+  acceptsExchange Boolean  @default(true) @map("accepts_exchange") // Acepta canje
+  exchangeNotes   String?  @db.Text @map("exchange_notes")
+  
+  // Priority & Status
+  priority        RequirementPriority @default(MEDIUM)
+  isActive        Boolean  @default(true) @map("is_active")
+  expiresAt       DateTime? @map("expires_at")
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  matches         Match[]  @relation("RequirementToMatch")
+  
+  @@index([userId])
+  @@index([budgetMax])
+  @@index([isActive])
+  @@map("requirements")
+}
+
+// ============================================================
+// 🔗 MATCH MODEL (Tabla Pivote Property <-> Requirement)
+// ============================================================
+model Match {
+  id              String   @id @default(cuid())
+  
+  // Match Score (0-100) - Qué tan bueno es el match
+  matchScore      Int      @map("match_score")
+  
+  // Status del Match
+  status          MatchStatus @default(PENDING)
+  
+  // Notas del match
+  notes           String?  @db.Text
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Tracking de interacciones
+  viewedAt        DateTime? @map("viewed_at")
+  contactedAt     DateTime? @map("contacted_at")
+  
+  // Relations
+  propertyId      String   @map("property_id")
+  property        Property @relation("PropertyToMatch", fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  requirementId   String   @map("requirement_id")
+  requirement     Requirement @relation("RequirementToMatch", fields: [requirementId], references: [id], onDelete: Cascade)
+  
+  @@unique([propertyId, requirementId]) // Un property solo puede matchear una vez con un requirement
+  @@index([propertyId])
+  @@index([requirementId])
+  @@index([status])
+  @@index([matchScore])
+  @@map("matches")
+}
+
+// ============================================================
+// 📸 PROPERTY IMAGES (Imágenes de propiedades)
+// ============================================================
+model PropertyImage {
+  id          String   @id @default(cuid())
+  url         String
+  altText     String?  @map("alt_text")
+  order       Int      @default(0)
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  propertyId  String   @map("property_id")
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  @@index([propertyId])
+  @@map("property_images")
+}
+
+// ============================================================
+// 📊 ENUMS
+// ============================================================
+
+enum PropertyType {
+  APARTMENT       // Departamento
+  HOUSE           // Casa
+  OFFICE          // Oficina
+  COMMERCIAL      // Local comercial
+  LAND            // Terreno
+  WAREHOUSE       // Bodega
+  PARKING         // Estacionamiento
+  OTHER           // Otro
+}
+
+enum PropertyStatus {
+  ACTIVE          // Activa
+  PENDING         // Pendiente de aprobación
+  SOLD            // Vendida
+  RENTED          // Arrendada
+  EXCHANGED       // Canjeada
+  INACTIVE        // Inactiva
+  ARCHIVED        // Archivada
+}
+
+enum MatchStatus {
+  PENDING         // Pendiente de revisión
+  VIEWED          // Visto
+  CONTACTED       // Contactado
+  INTERESTED      // Interesado
+  NEGOTIATING     // En negociación
+  CLOSED          // Cerrado/Exitoso
+  REJECTED        // Rechazado
+  EXPIRED         // Expirado
+}
+
+enum RequirementPriority {
+  LOW             // Baja
+  MEDIUM          // Media
+  HIGH            // Alta
+  URGENT          // Urgente
+}
