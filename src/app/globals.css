@@ -1,3 +1,6 @@
+/* Google Fonts - Inter (debe ir primero) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
 /* ============================================================
@@ -5,14 +8,11 @@
    Inspirado en: Linear, Airbnb, Stripe
    ============================================================ */
 
-/* Google Fonts - Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 :root {
     /* ============================================================
        COLOR PALETTE - Clean & Professional
        ============================================================ */
-    
+
     /* Neutrals - Base */
     --white: #FFFFFF;
     --gray-50: #FAFAFA;
@@ -25,7 +25,7 @@
     --gray-700: #404040;
     --gray-800: #262626;
     --gray-900: #171717;
-    
+
     /* Primary - Electric Blue (Acción) */
     --primary-50: #EFF6FF;
     --primary-100: #DBEAFE;
@@ -35,7 +35,7 @@
     --primary-500: #3B82F6;
     --primary-600: #2563EB;
     --primary-700: #1D4ED8;
-    
+
     /* Secondary - Mint Green (Éxito/Confirmación) */
     --mint-50: #ECFDF5;
     --mint-100: #D1FAE5;
@@ -44,18 +44,18 @@
     --mint-400: #34D399;
     --mint-500: #10B981;
     --mint-600: #059669;
-    
+
     /* Accent - Warm Orange (Destacar) */
     --accent-50: #FFF7ED;
     --accent-100: #FFEDD5;
     --accent-400: #FB923C;
     --accent-500: #F97316;
-    
+
     /* Semantic */
     --error: #EF4444;
     --warning: #F59E0B;
     --success: #10B981;
-    
+
     /* Background & Foreground */
     --background: var(--white);
     --foreground: var(--gray-900);
@@ -103,6 +103,7 @@ body {
 .card-hover {
     transition: all 0.2s ease;
 }
+
 .card-hover:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
@@ -118,6 +119,7 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
@@ -127,18 +129,39 @@ body {
    ============================================================ */
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes pulse-soft {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 .animate-fade-in {
@@ -150,7 +173,7 @@ body {
 }
 
 /* ============================================================
-   SHADCN OVERRIDES
+   BUTTON STYLES
    ============================================================ */
 
 .btn-primary {
