@@ -29,17 +29,16 @@ interface Property {
 
 const SALE_DECK: Property[] = [
     {
-        id: 'sale-1',
-        title: 'Edificio Lagos',
-        location: 'Temuco, Araucanía',
-        price: 185000000, // Precio estimado venta
+        id: 'sale-3',
+        title: 'Casa Familiar La Reina',
+        location: 'La Reina, Santiago',
+        price: 450000000,
         currency: 'CLP',
-        bedrooms: 2,
-        bathrooms: 2,
-        squareMeters: 75,
-        imageUrl: '/edificio-lagos.jpg', // Imagen Local
-        yield: 5.2,
-        tags: ['Oportunidad', '2% Comisión']
+        bedrooms: 5,
+        bathrooms: 4,
+        squareMeters: 280,
+        imageUrl: 'https://images.unsplash.com/photo-1600596542815-22b845074783?q=80&w=1000&auto=format&fit=crop',
+        tags: ['Remodelada']
     },
     {
         id: 'sale-2',
@@ -54,32 +53,21 @@ const SALE_DECK: Property[] = [
         tags: ['Turístico']
     },
     {
-        id: 'sale-3',
-        title: 'Casa Familiar La Reina',
-        location: 'La Reina, Santiago',
-        price: 450000000,
+        id: 'sale-1',
+        title: 'Edificio Lagos',
+        location: 'Temuco, Araucanía',
+        price: 185000000, // Precio estimado venta
         currency: 'CLP',
-        bedrooms: 5,
-        bathrooms: 4,
-        squareMeters: 280,
-        imageUrl: 'https://images.unsplash.com/photo-1600596542815-22b845074783?q=80&w=1000&auto=format&fit=crop',
-        tags: ['Remodelada']
-    },
+        bedrooms: 2,
+        bathrooms: 2,
+        squareMeters: 75,
+        imageUrl: '/edificio-lagos.jpg', // Imagen Local
+        yield: 5.2,
+        tags: ['Oportunidad', '2% Comisión']
+    }
 ]
 
 const RENT_DECK: Property[] = [
-    {
-        id: 'rent-1',
-        title: 'Edificio Jardín de Reyes',
-        location: 'Centro, Temuco',
-        price: 450000,
-        currency: 'CLP',
-        bedrooms: 3,
-        bathrooms: 2,
-        squareMeters: 85, // Estimado
-        imageUrl: '/edificio-jardin-reyes.jpg', // Imagen Local
-        tags: ['Arriendo', 'Comisión 50%']
-    },
     {
         id: 'rent-2',
         title: 'Oficina Moderna Providencia',
@@ -91,6 +79,18 @@ const RENT_DECK: Property[] = [
         squareMeters: 140,
         imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop',
         tags: ['Comercial', 'Arriendo']
+    },
+    {
+        id: 'rent-1',
+        title: 'Edificio Jardín de Reyes',
+        location: 'Centro, Temuco',
+        price: 450000,
+        currency: 'CLP',
+        bedrooms: 3,
+        bathrooms: 2,
+        squareMeters: 85, // Estimado
+        imageUrl: '/edificio-jardin-reyes.jpg', // Imagen Local
+        tags: ['Arriendo', 'Comisión 50%']
     }
 ]
 
@@ -124,8 +124,8 @@ export function PropertySwiper() {
                     <button
                         onClick={() => setOperationType('SALE')}
                         className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${operationType === 'SALE'
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
                         Venta
@@ -133,8 +133,8 @@ export function PropertySwiper() {
                     <button
                         onClick={() => setOperationType('RENT')}
                         className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${operationType === 'RENT'
-                                ? 'bg-purple-600 text-white shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900'
+                            ? 'bg-purple-600 text-white shadow-sm'
+                            : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
                         Arriendo
@@ -239,11 +239,18 @@ function Card({ property, active, removeCard }: CardProps) {
         </div>
     )
 
-    const formattedPrice = new Intl.NumberFormat('es-CL', {
-        style: 'currency',
-        currency: property.currency,
-        maximumFractionDigits: 0,
-    }).format(property.price)
+    const formatPrice = (price: number, currency: string) => {
+        if (currency === 'UF') {
+            return `UF ${price.toLocaleString('es-CL')}`
+        }
+        return new Intl.NumberFormat('es-CL', {
+            style: 'currency',
+            currency: currency,
+            maximumFractionDigits: 0,
+        }).format(price)
+    }
+
+    const formattedPrice = formatPrice(property.price, property.currency)
 
     return (
         <motion.div
