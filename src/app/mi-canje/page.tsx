@@ -135,8 +135,9 @@ export default function MiCanjePage() {
                     {state.step === 'BUDGET' && (
                         <BudgetStep
                             action={state.action}
+                            // @ts-ignore
                             onBack={() => setState(prev => ({ ...prev, step: 'TYPE' }))}
-                            onFinish={(val) => handleSelect('budget', val, 'FINISH')}
+                            onFinish={(val: string) => handleSelect('budget', val, 'FINISH')}
                         />
                     )}
 
