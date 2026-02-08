@@ -27,8 +27,11 @@ interface WizardData {
 
 const TOTAL_STEPS = 4
 
+import { uploadProperty } from '@/app/actions/property'
+
 export function PublishWizard() {
     const [step, setStep] = useState<WizardStep>(1)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [data, setData] = useState<WizardData>({
         propertyType: null,
         location: '',
@@ -55,11 +58,39 @@ export function PublishWizard() {
             case 1:
                 return data.propertyType !== null
             case 2:
-                return data.comuna.trim() !== ''
+                // Debe haber una comuna o ubicacion
+                return data.comuna.trim() !== '' || data.location.trim() !== ''
             case 3:
                 return data.price.trim() !== ''
             default:
                 return true
+        }
+    }
+
+    const handleSubmit = async () => {
+        setIsSubmitting(true)
+        const formData = new FormData()
+
+        // Mapeo de datos para el Server Action
+        formData.append('title', `${data.propertyType === 'HOUSE' ? 'Casa' : 'Departamento'} en ${data.comuna || 'Santiago'}`)
+        formData.append('description', `Excelente oportunidad en ${data.location}.`)
+        formData.append('price', data.price)
+        formData.append('currency', 'CLP') // Asumimos CLP por ahora
+        formData.append('bedrooms', data.bedrooms || '0')
+        formData.append('bathrooms', data.bathrooms || '0')
+        formData.append('squareMeters', data.squareMeters || '0')
+        formData.append('location', `${data.location}, ${data.comuna}`)
+        formData.append('propertyType', data.propertyType || 'APARTMENT')
+
+        // TODO: Manejar fotos cuando tengamos storage
+
+        try {
+            await uploadProperty(formData)
+            // La redirección ocurre en el server action
+        } catch (error) {
+            console.error(error)
+            alert('Error al publicar propiedad. Intenta de nuevo.')
+            setIsSubmitting(false)
         }
     }
 
@@ -70,7 +101,7 @@ export function PublishWizard() {
                 <div className="flex items-center justify-between px-4 h-14">
                     <button
                         onClick={prevStep}
-                        disabled={step === 1}
+                        disabled={step === 1 || isSubmitting}
                         className="p-2 -ml-2 text-gray-500 hover:text-gray-900 disabled:opacity-30"
                     >
                         <ChevronLeft className="w-5 h-5" />
@@ -82,7 +113,8 @@ export function PublishWizard() {
 
                     <button
                         onClick={() => {/* Close wizard */ }}
-                        className="text-sm text-gray-500 hover:text-gray-900"
+                        disabled={isSubmitting}
+                        className="text-sm text-gray-500 hover:text-gray-900 disabled:opacity-50"
                     >
                         Cancelar
                     </button>
@@ -122,11 +154,16 @@ export function PublishWizard() {
             {/* Footer */}
             <footer className="sticky bottom-0 p-4 bg-white border-t border-gray-100 safe-area-pb">
                 <Button
-                    onClick={step === TOTAL_STEPS ? () => console.log('Submit', data) : nextStep}
-                    disabled={!canProceed()}
+                    onClick={step === TOTAL_STEPS ? handleSubmit : nextStep}
+                    disabled={!canProceed() || isSubmitting}
                     className="w-full h-12 btn-primary text-base font-semibold disabled:opacity-50"
                 >
-                    {step === TOTAL_STEPS ? (
+                    {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Publicando...
+                        </span>
+                    ) : step === TOTAL_STEPS ? (
                         <span className="flex items-center gap-2">
                             <Check className="w-5 h-5" />
                             Publicar Propiedad
@@ -196,8 +233,8 @@ function PropertyTypeCard({
         <button
             onClick={onClick}
             className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all ${selected
-                    ? 'border-blue-500 bg-blue-50 text-blue-600'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                ? 'border-blue-500 bg-blue-50 text-blue-600'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                 }`}
         >
             <Icon className={`w-10 h-10 mb-3 ${selected ? 'text-blue-500' : ''}`} strokeWidth={1.5} />
@@ -245,8 +282,8 @@ function StepLocation({
                                 key={c}
                                 onClick={() => onChange('comuna', c)}
                                 className={`px-3 py-1.5 rounded-full text-sm transition-all ${comuna === c
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {c}
