@@ -23,36 +23,38 @@ interface Property {
     tags?: string[]
 }
 
-// Mock Data (Para demo)
-const MOCK_PROPERTIES: Property[] = [
+// ============================================================
+// 🃏 MOCK DATA - Decks Separados (Venta vs Arriendo)
+// ============================================================
+
+const SALE_DECK: Property[] = [
     {
-        id: '1',
+        id: 'sale-1',
         title: 'Edificio Lagos',
         location: 'Temuco, Araucanía',
-        price: 185000000,
+        price: 185000000, // Precio estimado venta
         currency: 'CLP',
         bedrooms: 2,
         bathrooms: 2,
         squareMeters: 75,
-        imageUrl: '/edificio-lagos.jpg', // Imagen local
+        imageUrl: '/edificio-lagos.jpg', // Imagen Local
         yield: 5.2,
         tags: ['Oportunidad', '2% Comisión']
     },
     {
-        id: '2',
-        title: 'Oficina Moderna Providencia',
-        location: 'Providencia, Santiago',
-        price: 12500,
-        currency: 'UF',
-        bedrooms: 4,
-        bathrooms: 3,
-        squareMeters: 140,
-        imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop',
-        yield: 6.8,
-        tags: ['Inversión', 'Arrendada']
+        id: 'sale-2',
+        title: 'Departamento Vista Mar',
+        location: 'Concón, Valparaíso',
+        price: 185000000,
+        currency: 'CLP',
+        bedrooms: 3,
+        bathrooms: 2,
+        squareMeters: 95,
+        imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop',
+        tags: ['Turístico']
     },
     {
-        id: '3',
+        id: 'sale-3',
         title: 'Casa Familiar La Reina',
         location: 'La Reina, Santiago',
         price: 450000000,
@@ -65,14 +67,49 @@ const MOCK_PROPERTIES: Property[] = [
     },
 ]
 
+const RENT_DECK: Property[] = [
+    {
+        id: 'rent-1',
+        title: 'Edificio Jardín de Reyes',
+        location: 'Centro, Temuco',
+        price: 450000,
+        currency: 'CLP',
+        bedrooms: 3,
+        bathrooms: 2,
+        squareMeters: 85, // Estimado
+        imageUrl: '/edificio-jardin-reyes.jpg', // Imagen Local
+        tags: ['Arriendo', 'Comisión 50%']
+    },
+    {
+        id: 'rent-2',
+        title: 'Oficina Moderna Providencia',
+        location: 'Providencia, Santiago',
+        price: 25, // UF
+        currency: 'UF',
+        bedrooms: 4,
+        bathrooms: 3,
+        squareMeters: 140,
+        imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop',
+        tags: ['Comercial', 'Arriendo']
+    }
+]
+
 export function PropertySwiper() {
-    const [cards, setCards] = useState<Property[]>(MOCK_PROPERTIES)
     const [operationType, setOperationType] = useState<'SALE' | 'RENT'>('SALE')
+    const [cards, setCards] = useState<Property[]>(SALE_DECK)
+
+    // Efecto para cambiar el deck cuando cambia el tipo de operación
+    React.useEffect(() => {
+        setCards(operationType === 'SALE' ? SALE_DECK : RENT_DECK)
+    }, [operationType])
 
     const removeCard = (id: string, direction: 'left' | 'right') => {
         setCards((prev) => prev.filter((card) => card.id !== id))
         console.log(`Card ${id} swiped ${direction}`)
-        // Aquí iría la lógica de Match o Descarte
+    }
+
+    const resetDeck = () => {
+        setCards(operationType === 'SALE' ? SALE_DECK : RENT_DECK)
     }
 
     return (
@@ -96,7 +133,7 @@ export function PropertySwiper() {
                     <button
                         onClick={() => setOperationType('RENT')}
                         className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${operationType === 'RENT'
-                                ? 'bg-blue-600 text-white shadow-sm'
+                                ? 'bg-purple-600 text-white shadow-sm'
                                 : 'text-gray-500 hover:text-gray-900'
                             }`}
                     >
@@ -128,18 +165,19 @@ export function PropertySwiper() {
 
                     {cards.length === 0 && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gray-50 rounded-3xl border border-gray-100">
-                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                                <Check className="w-8 h-8 text-blue-600" />
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${operationType === 'SALE' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'
+                                }`}>
+                                <Check className="w-8 h-8" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">¡Estás al día!</h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">¡Todo al día en {operationType === 'SALE' ? 'Ventas' : 'Arriendos'}!</h3>
                             <p className="text-gray-500">
-                                No hay más propiedades que coincidan con tus criterios por ahora.
+                                No hay más propiedades disponibles en esta categoría.
                             </p>
                             <button
-                                onClick={() => setCards(MOCK_PROPERTIES)}
+                                onClick={resetDeck}
                                 className="mt-6 px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50"
                             >
-                                Volver a empezar
+                                Volver a ver
                             </button>
                         </div>
                     )}
@@ -179,11 +217,9 @@ function Card({ property, active, removeCard }: CardProps) {
     const rotate = useTransform(x, [-200, 200], [-10, 10])
     const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0])
 
-    // Indicadores visuales de LIKE / NOPE
     const likeOpacity = useTransform(x, [50, 150], [0, 1])
     const nopeOpacity = useTransform(x, [-150, -50], [1, 0])
 
-    // Color de borde dinámico
     const borderColor = useTransform(
         x,
         [-200, 0, 200],
@@ -200,7 +236,6 @@ function Card({ property, active, removeCard }: CardProps) {
 
     if (!active) return (
         <div className="absolute top-0 left-0 w-full h-full bg-white rounded-3xl shadow-xl border border-gray-100 p-0 transform scale-95 opacity-50 -z-10 translate-y-4">
-            {/* Tarjeta de fondo estática */}
         </div>
     )
 
@@ -219,7 +254,7 @@ function Card({ property, active, removeCard }: CardProps) {
             className="absolute top-0 left-0 w-full h-full bg-white rounded-3xl shadow-2xl cursor-grab active:cursor-grabbing overflow-hidden group select-none"
             whileTap={{ scale: 1.02 }}
         >
-            {/* Etiquetas Flotantes (LIKE / NOPE) */}
+            {/* Etiquetas Flotantes */}
             <motion.div style={{ opacity: likeOpacity }} className="absolute top-8 left-8 z-20 transform -rotate-12 pointer-events-none">
                 <div className="border-4 border-blue-500 text-blue-500 font-bold text-3xl px-4 py-1 rounded-lg uppercase tracking-wider bg-white/20 backdrop-blur-sm">
                     Canjear
@@ -241,10 +276,8 @@ function Card({ property, active, removeCard }: CardProps) {
                     priority
                 />
 
-                {/* Degradado para texto sobre imagen */}
                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
 
-                {/* badges sobre imagen */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
                     {property.yield && (
                         <div className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
@@ -259,15 +292,13 @@ function Card({ property, active, removeCard }: CardProps) {
                     ))}
                 </div>
 
-                {/* Precio sobre imagen */}
                 <div className="absolute bottom-4 left-4 text-white">
                     <p className="text-3xl font-bold drop-shadow-md">{formattedPrice}</p>
                 </div>
             </div>
 
-            {/* Contenido / Detalles */}
+            {/* Detalles */}
             <div className="h-[35%] p-6 flex flex-col justify-between bg-white relative">
-                {/* Barra de progreso visual (decorativa) */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100">
                     <div className="h-full w-1/3 bg-blue-500 rounded-r-full" />
                 </div>
@@ -281,7 +312,6 @@ function Card({ property, active, removeCard }: CardProps) {
                         <span className="text-sm font-medium">{property.location}</span>
                     </div>
 
-                    {/* Grid de Características */}
                     <div className="grid grid-cols-3 gap-2 py-2 border-t border-gray-100">
                         <Feature icon={BedDouble} value={`${property.bedrooms} Dorm`} />
                         <Feature icon={Maximize} value={`${property.squareMeters} m²`} />
