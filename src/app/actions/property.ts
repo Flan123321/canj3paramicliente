@@ -19,7 +19,7 @@ export async function uploadProperty(formData: FormData) {
         throw new Error('Unauthorized')
     }
 
-    // Extraer datos del FormData (simplificado para demo)
+    // Extraer datos textuales
     const title = formData.get('title') as string
     const description = formData.get('description') as string
     const price = parseFloat(formData.get('price') as string)
@@ -28,7 +28,26 @@ export async function uploadProperty(formData: FormData) {
     const bathrooms = parseInt(formData.get('bathrooms') as string)
     const squareMeters = parseInt(formData.get('squareMeters') as string)
     const location = formData.get('location') as string
-    const propertyType = formData.get('propertyType') as any || 'APARTMENT' // Default simple
+    const propertyType = formData.get('propertyType') as any || 'APARTMENT'
+
+    // 📸 MOCK IMAGE LOGIC
+    // Como no tenemos S3 bucket configurado en este entorno, asignamos una imagen 
+    // de alta calidad de Unsplash basada en el tipo de propiedad para que la DEMO se vea profesional.
+
+    // Arrays de imágenes de stock premium
+    const HOUSE_IMAGES = [
+        "https://images.unsplash.com/photo-1600596542815-60c37c6525fa?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop"
+    ]
+    const APARTMENT_IMAGES = [
+        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1035&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1515263487990-61b07816b324?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop"
+    ]
+
+    const imagePool = propertyType === 'HOUSE' ? HOUSE_IMAGES : APARTMENT_IMAGES
+    const randomImage = imagePool[Math.floor(Math.random() * imagePool.length)]
 
     // 1. Guardar Propiedad en BD
     try {
@@ -44,25 +63,28 @@ export async function uploadProperty(formData: FormData) {
                 location,
                 propertyType,
                 ownerId: user.id,
-                status: 'ACTIVE'
+                status: 'ACTIVE',
+                // Guardamos la imagen en la tabla relacionada PropertyImage
+                images: {
+                    create: [
+                        { url: randomImage, isPrimary: true }
+                    ]
+                }
             }
         })
 
         console.log(`[ACTION] Property created: ${property.id}`)
 
-        // 2. Ejecutar Lógica de Negocio (Async - No bloqueante idealmente)
-        // En Vercel/Serverless esto debe esperarse o usar un Queue, aquí lo hacemos await rápido
+        // 2. Ejecutar Lógica de Negocio (Matches, etc.)
         await updateDistressedStatus(property.id)
         await findMatchesForProperty(property.id)
 
-        // 3. Revalidar cache y Redireccionar
+        // 3. Revalidar
         revalidatePath('/dashboard')
         revalidatePath('/buscar')
 
     } catch (error) {
         console.error('[ACTION] Error uploading property:', error)
-        // No podemos retornar objeto si vamos a hacer redirect después, pero si falla antes sí.
-        // Mejor lanzar error para que el cliente lo maneje
         throw new Error('Failed to upload property')
     }
 
@@ -75,16 +97,11 @@ export async function uploadProperty(formData: FormData) {
 // ============================================================
 
 export async function getMatchesForUser() {
-    const supabase = await createClient() // Await añadido
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return []
 
-    // Buscar matches donde:
-    // A) Soy dueño de la Propiedad (Alguien quiere mi casa)
-    // B) Soy dueño del Requerimiento (Encontré una casa)
-
-    // Caso A: Mis Propiedades tienen matches
     const propertyMatches = await prisma.match.findMany({
         where: {
             property: {
@@ -93,12 +110,38 @@ export async function getMatchesForUser() {
         },
         include: {
             requirement: {
-                include: { user: true } // Datos del interesado
+                include: { user: true }
             },
-            property: true // Datos de mi propiedad
+            property: {
+                include: {
+                    images: true
+                }
+            }
         },
         orderBy: { createdAt: 'desc' }
     })
 
     return propertyMatches
+}
+
+// ============================================================
+// 🗺️ MAP ACTION: GET ALL PROPERTIES
+// ============================================================
+
+export async function getAllProperties() {
+    const properties = await prisma.property.findMany({
+        where: {
+            status: 'ACTIVE',
+        },
+        include: {
+            images: true, // Incluimos imágenes para el mapa
+            owner: {
+                select: { name: true, isVerified: true, reputationScore: true }
+            }
+        },
+        take: 50,
+        orderBy: { createdAt: 'desc' }
+    })
+
+    return properties
 }

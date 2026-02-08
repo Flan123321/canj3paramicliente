@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Home, Building2, MapPin, Camera, DollarSign, Check } from 'lucide-react'
+import React, { useState } from 'react'
+import { ChevronLeft, ChevronRight, Home, Building2, MapPin, Camera, DollarSign, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -317,13 +317,33 @@ function StepLocation({
 // STEP 3: Precio y Detalles
 // ============================================================
 
+// ============================================================
+// STEP 3: Precio y Detalles (Photos Updated)
+// ============================================================
+
 function StepDetails({
     data,
     onChange,
 }: {
     data: WizardData
-    onChange: (field: string, value: string) => void
+    onChange: (field: string, value: any) => void
 }) {
+    const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            // Convert to array
+            const newFiles = Array.from(e.target.files)
+            onChange('photos', [...data.photos, ...newFiles])
+        }
+    }
+
+    const removePhoto = (index: number) => {
+        const newPhotos = [...data.photos]
+        newPhotos.splice(index, 1)
+        onChange('photos', newPhotos)
+    }
+
     return (
         <div className="animate-fade-in">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -346,7 +366,7 @@ function StepDetails({
                             type="number"
                             value={data.price}
                             onChange={(e) => onChange('price', e.target.value)}
-                            placeholder="150.000.000"
+                            placeholder="150000000"
                             className="pl-10 h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         />
                     </div>
@@ -395,15 +415,50 @@ function StepDetails({
                     </div>
                 </div>
 
-                {/* Photo Upload Placeholder */}
+                {/* Photo Upload Real */}
                 <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                        Fotos (opcional por ahora)
+                        Fotos de la propiedad
                     </Label>
-                    <button className="w-full h-32 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors">
-                        <Camera className="w-8 h-8 mb-2" />
-                        <span className="text-sm">Agregar fotos</span>
-                    </button>
+
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                        {data.photos.map((file, i) => (
+                            <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group">
+                                <img
+                                    src={URL.createObjectURL(file)}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                />
+                                <button
+                                    onClick={() => removePhoto(i)}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ))}
+
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="aspect-square border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors bg-gray-50"
+                        >
+                            <Camera className="w-6 h-6 mb-1" />
+                            <span className="text-xs">Agregar</span>
+                        </button>
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileChange}
+                    />
+
+                    <p className="text-xs text-gray-400">
+                        * En modo demo, las imágenes se guardarán localmente en el navegador.
+                    </p>
                 </div>
             </div>
         </div>

@@ -1,177 +1,173 @@
 import { redirect } from 'next/navigation'
-import { getUser, getUserProfile, logout } from '../auth/actions'
+import { getUser, getUserProfile } from '../auth/actions'
 import { getMatchesForUser } from '../actions/property'
 import Link from 'next/link'
-import { Bell, Flame, TrendingUp } from 'lucide-react'
+import { Search, Home, TrendingUp, ArrowRight, User as UserIcon } from 'lucide-react'
 
 // ============================================================
-// 📊 DASHBOARD - "MIS CANJES"
+// 🌟 NEW DASHBOARD - "SIMPLE & DIRECT"
 // ============================================================
 
 export default async function DashboardPage() {
+    // 1. Auth Check
     const user = await getUser()
-
-    if (!user) {
-        redirect('/auth/login')
-    }
+    if (!user) redirect('/auth/login')
 
     const profile = await getUserProfile()
-
-    // 1. Cargar Matches Reales
     const matches = await getMatchesForUser()
-    const matchCount = matches.length
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900 pb-20">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-                    <Link href="/" className="text-xl font-bold text-gray-900 flex items-center gap-1">
-                        Canje<span className="text-blue-600">ParaMiCliente</span>
-                    </Link>
-
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-600 hidden sm:block">
-                            {profile?.name || user.email}
-                        </span>
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                            {profile?.name?.[0] || 'U'}
-                        </div>
-                        <form action={logout}>
-                            <button
-                                type="submit"
-                                className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-                            >
-                                Salir
-                            </button>
-                        </form>
+        <div className="min-h-screen bg-gray-50 pb-24 font-sans">
+            {/* Header Mínimalista */}
+            <header className="bg-white px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+                <div className="flex items-center gap-2">
+                    <div className="bg-blue-600 rounded-lg p-1.5">
+                        <span className="text-white font-bold text-lg">C</span>
                     </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-                {/* Welcome & Stats */}
-                <div className="grid md:grid-cols-4 gap-6">
-                    <div className="md:col-span-3">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                            Hola, {profile?.name?.split(' ')[0] || 'Corredor'}
-                        </h1>
-                        <p className="text-gray-500">
-                            Aquí tienes el resumen de tu actividad hoy.
-                        </p>
-                    </div>
-
-                    {/* Archer Score Card (Fake for demo) */}
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 text-white shadow-lg flex items-center justify-between">
-                        <div>
-                            <p className="text-xs text-gray-400 uppercase font-semibold">Reputación</p>
-                            <p className="text-2xl font-bold text-yellow-400">Level 3</p>
-                        </div>
-                        <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                            ⭐
-                        </div>
-                    </div>
+                    <span className="font-bold text-slate-800 text-lg">CanjeParaMiCliente</span>
                 </div>
 
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatBox label="Propiedades" value="0" icon="🏠" />
-                    <StatBox label="Requerimientos" value="0" icon="🎯" />
-                    <StatBox label="Matches" value={matchCount.toString()} icon="🔥" highlight />
-                    <StatBox label="Vistas" value="0" icon="👁️" />
-                </div>
-
-                {/* 🚀 MATCHES FEED (El Core del Dashboard) */}
-                <section>
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <Flame className="w-5 h-5 text-orange-500" />
-                            Oportunidades de Match
-                        </h2>
-                        {matchCount > 0 && (
-                            <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
-                                {matchCount} Nuevos
-                            </span>
-                        )}
-                    </div>
-
-                    {matches.length === 0 ? (
-                        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <TrendingUp className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-1">Sin matches por ahora</h3>
-                            <p className="text-sm text-gray-500 mb-6">Estamos buscando compradores para tus propiedades.</p>
-                            <Link href="/publicar">
-                                <button className="btn-primary px-6 py-2 text-sm">
-                                    Publicar Propiedad
-                                </button>
-                            </Link>
-                        </div>
+                <Link href="/perfil" className="relative group">
+                    {profile?.avatarUrl ? (
+                        <img src={profile.avatarUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
                     ) : (
-                        <div className="grid gap-4">
-                            {matches.map((match) => (
-                                <MatchCard key={match.id} match={match} />
-                            ))}
+                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 border-2 border-white shadow-sm hover:bg-slate-300 transition-colors">
+                            <UserIcon className="w-5 h-5" />
                         </div>
                     )}
-                </section>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                </Link>
+            </header>
 
-                {/* Quick Actions */}
-                <div className="grid md:grid-cols-2 gap-4">
-                    <Link href="/publicar" className="group">
-                        <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-1">
-                            <h3 className="font-bold text-lg mb-1">Publicar Propiedad</h3>
-                            <p className="text-blue-100 text-sm">Sube una nueva propiedad y encuentra matches instantáneos.</p>
+            <main className="max-w-md mx-auto px-6 py-8">
+
+                {/* Hero Text */}
+                <h1 className="text-2xl font-bold text-slate-900 text-center mb-10 leading-tight">
+                    ¿Cómo podemos ayudarte hoy?
+                </h1>
+
+                {/* Main Actions - The "Big Buttons" */}
+                <div className="space-y-4 mb-12">
+                    {/* Opción 1: Buscar (Tengo Cliente) */}
+                    <Link href="/buscar" className="block group">
+                        <div className="bg-blue-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-600/20 transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ArrowRight className="w-6 h-6" />
+                            </div>
+
+                            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm">
+                                <Search className="w-7 h-7 text-white" strokeWidth={2.5} />
+                            </div>
+
+                            <h2 className="text-xl font-bold mb-1">Tengo un Cliente</h2>
+                            <p className="text-blue-100 text-sm font-medium opacity-90">
+                                Busco una propiedad para mi cliente
+                            </p>
                         </div>
                     </Link>
-                    <Link href="/requerimientos/nuevo" className="group">
-                        <div className="bg-gray-900 rounded-2xl p-6 text-white shadow-lg hover:shadow-gray-500/30 transition-all hover:-translate-y-1">
-                            <h3 className="font-bold text-lg mb-1">Crear Requerimiento</h3>
-                            <p className="text-gray-400 text-sm">Define qué busca tu cliente y recibe notificaciones.</p>
+
+                    {/* Opción 2: Publicar (Tengo Propiedad) */}
+                    <Link href="/publicar" className="block group">
+                        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-6 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ArrowRight className="w-6 h-6" />
+                            </div>
+
+                            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100">
+                                <Home className="w-7 h-7 text-slate-700" strokeWidth={2} />
+                            </div>
+
+                            <h2 className="text-xl font-bold text-slate-900 mb-1">Tengo una Propiedad</h2>
+                            <p className="text-slate-500 text-sm font-medium">
+                                Busco un comprador para mi propiedad
+                            </p>
                         </div>
                     </Link>
                 </div>
+
+                {/* Recent Opportunities Feed */}
+                <section>
+                    <div className="flex items-center gap-2 mb-6">
+                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-bold text-slate-800 text-lg">Oportunidades Recientes</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        {matches.length > 0 ? (
+                            matches.map((match) => (
+                                <MatchCard key={match.id} match={match} />
+                            ))
+                        ) : (
+                            <EmptyState />
+                        )}
+                    </div>
+                </section>
             </main>
         </div>
     )
 }
 
-function StatBox({ label, value, icon, highlight }: any) {
+// 🃏 Componentes UI Auxiliares
+
+function MatchCard({ match }: { match: any }) {
+    // Intentamos obtener la imagen, si no hay, fallback
+    const image = match.property.images?.[0]?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=1000'
+
     return (
-        <div className={`bg-white rounded-xl p-4 border ${highlight ? 'border-orange-200 bg-orange-50/50' : 'border-gray-100'} shadow-sm`}>
-            <div className="flex justify-between items-start mb-2">
-                <span className="text-2xl">{icon}</span>
-                {highlight && <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />}
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div className="relative h-48">
+                <img
+                    src={image}
+                    alt="Property"
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-blue-800 shadow-sm">
+                    {match.matchScore}% Match
+                </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-            <p className={`text-xs ${highlight ? 'text-orange-600 font-medium' : 'text-gray-500'}`}>{label}</p>
+
+            <div className="p-5">
+                <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 className="font-bold text-slate-900 text-lg leading-tight mb-1">
+                            {match.property.title}
+                        </h4>
+                        <p className="text-slate-500 text-sm flex items-center gap-1">
+                            {match.property.location}
+                        </p>
+                    </div>
+                    <span className="font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded-lg text-sm border border-slate-100">
+                        {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(match.property.price))}
+                    </span>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                    <span className="text-xs font-semibold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg">
+                        {match.property.propertyType === 'APARTMENT' ? 'Depto' : 'Casa'}
+                    </span>
+                    <span className="text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg">
+                        {match.property.bedrooms}D / {match.property.bathrooms}B
+                    </span>
+                </div>
+
+                <button className="w-full mt-4 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all text-sm">
+                    Solicitar Canje
+                </button>
+            </div>
         </div>
     )
 }
 
-function MatchCard({ match }: { match: any }) {
+function EmptyState() {
     return (
-        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center text-green-600 font-bold text-lg">
-                    {match.matchScore}%
-                </div>
-                <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                        {match.property ? `Match para: ${match.property.title}` : 'Match encontrado'}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                        {match.requirement?.user?.name || 'Usuario Anónimo'} busca en {match.property?.location}
-                    </p>
-                </div>
+        <div className="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-slate-100">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Home className="w-6 h-6 text-slate-300" />
             </div>
-
-            <button className="px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                Contactar
-            </button>
+            <h4 className="font-semibold text-slate-900 mb-1">No hay matches aún</h4>
+            <p className="text-sm text-slate-500">
+                Publica una propiedad o crea un requerimiento para ver oportunidades aquí.
+            </p>
         </div>
     )
 }
