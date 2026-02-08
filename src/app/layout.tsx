@@ -21,6 +21,8 @@ export const viewport: Viewport = {
   themeColor: "#FFFFFF",
 };
 
+import { PushNotificationSimulator } from '@/components/ui/push-notification'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={inter.variable}>
       <body className="font-sans antialiased bg-white text-gray-900">
+        <PushNotificationSimulator />
         {children}
       </body>
     </html>

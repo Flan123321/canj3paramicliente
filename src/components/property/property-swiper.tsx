@@ -286,6 +286,18 @@ function Card({ property, active, removeCard }: CardProps) {
                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
 
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                    {/* ARCHER HOOK: Distressed Asset Badge */}
+                    {property.id === 'sale-1' && (
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1 border border-white/20"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z" /><path d="M11 3 8 9l4 13 4-13-3-6" /></svg>
+                            Oportunidad Archer
+                        </motion.div>
+                    )}
+
                     {property.yield && (
                         <div className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" />
@@ -301,6 +313,12 @@ function Card({ property, active, removeCard }: CardProps) {
 
                 <div className="absolute bottom-4 left-4 text-white">
                     <p className="text-3xl font-bold drop-shadow-md">{formattedPrice}</p>
+                    {/* Archer Hook: Price Insight */}
+                    {property.id === 'sale-1' && (
+                        <span className="text-xs bg-white/20 px-2 py-0.5 rounded text-white backdrop-blur-sm mt-1 inline-block">
+                            📉 12% bajo mercado
+                        </span>
+                    )}
                 </div>
             </div>
 
