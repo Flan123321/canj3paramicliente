@@ -12,9 +12,11 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Validar que DATABASE_URL esté configurada
-const databaseUrl = process.env.DATABASE_URL
+// Validar que DATABASE_URL esté configurada (o usar DIRECT_URL como fallback)
+const databaseUrl = process.env.DATABASE_URL || process.env.DIRECT_URL
+
 if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is not set')
+    throw new Error('❌ DATABASE_URL (or DIRECT_URL) environment variable is not set. Please add it in Vercel Settings.')
 }
 
 // Crear pool de conexiones (reutilizado en development para hot-reload)
